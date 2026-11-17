@@ -329,10 +329,6 @@ footer {
   background: var(--surface);
 }
 
-.node.server {
-  border-color: var(--accent);
-}
-
 .node h3 {
   margin: 0 0 6px;
   font-size: 15px;
