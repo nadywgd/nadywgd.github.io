@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Karaoke Night · Nady Wagdy</title>
+    <meta
+      name="description"
+      content="Case study: a desktop app that runs a live karaoke and music quiz night, controlled in real time from any phone."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body class="case">
+    <div class="wrap">
+      <a class="back" href="../index.html">← Nady Wagdy</a>
+
+      <header class="hero">
+        <h1>Karaoke Night</h1>
+        <p class="lead">
+          A desktop app that runs a live karaoke and music quiz night. The TV
+          shows synced lyrics and game screens, while the host runs everything
+          from a laptop or any phone on the same Wi‑Fi.
+        </p>
+        <ul class="tags" style="margin-top: 20px">
+          <li>TypeScript</li>
+          <li>React</li>
+          <li>Node.js</li>
+          <li>Express</li>
+          <li>Socket.IO</li>
+          <li>SQLite</li>
+          <li>Electron</li>
+        </ul>
+      </header>
+
+      <div class="video">
+        <video
+          src="../assets/karaoke-night/demo.mp4"
+          poster="../assets/karaoke-night/cover.jpg"
+          controls
+          muted
+          playsinline
+          preload="metadata"
+        ></video>
+      </div>
+      <p class="caption">
+        One-minute walkthrough. Left: the TV display. Right: the control panel
+        at phone size. All names, questions and songs are demo data.
+      </p>
+
+      <section>
+        <h2>The problem</h2>
+        <div class="prose">
+          <p>
+            A karaoke and music quiz night has a lot of moving parts: the
+            singer queue, the song videos, several games, team scores and a
+            final. Running them from separate tabs and files is slow and easy
+            to get wrong in front of a room.
+          </p>
+          <p>
+            The goal was one app that runs the whole night. It had to be
+            operable by one person from a phone while walking around the room,
+            and run from a single laptop driving several TVs.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>What it does</h2>
+        <div class="gallery three">
+          <figure>
+            <img
+              src="../assets/karaoke-night/karaoke.jpg"
+              alt="Karaoke screen with the current line filling word by word"
+              loading="lazy"
+            />
+            <figcaption>
+              Karaoke with lyrics that fill word by word, in time with the
+              music.
+            </figcaption>
+          </figure>
+          <figure>
+            <img
+              src="../assets/karaoke-night/quiz.jpg"
+              alt="Music quiz question with four answers"
+              loading="lazy"
+            />
+            <figcaption>Music quiz with reveal and team scoring.</figcaption>
+          </figure>
+          <figure>
+            <img
+              src="../assets/karaoke-night/winner.jpg"
+              alt="Grand final winner screen with confetti"
+              loading="lazy"
+            />
+            <figcaption>
+              Grand final: the top three teams, audience voting and the
+              winner.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section>
+        <h2>Architecture</h2>
+        <div class="flow">
+          <div class="node">
+            <h3>Control panels</h3>
+            <p>
+              React + MUI. Open on the laptop or any phone. Send intents only,
+              never state.
+            </p>
+          </div>
+          <div class="node server">
+            <h3>Server</h3>
+            <p>
+              Node.js, Express, Socket.IO. Validates every event, writes to
+              SQLite and broadcasts the full state.
+            </p>
+          </div>
+          <div class="node">
+            <h3>Display</h3>
+            <p>
+              React, fullscreen on the second screen. Pure function of the
+              state it receives.
+            </p>
+          </div>
+        </div>
+        <div class="prose" style="margin-top: 18px">
+          <p>
+            The server is the single source of truth. Every action follows the
+            same path: event → validate → write → broadcast. Any number of
+            controls and displays stay in sync, and a client that drops off
+            Wi‑Fi recovers the exact state the moment it reconnects. Electron
+            wraps the server and both windows into one Mac app.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Engineering highlights</h2>
+        <ul class="highlights">
+          <li>
+            <h3>Word-by-word lyric sync</h3>
+            <p>
+              An LRC parser with per-word timestamps, and a renderer that
+              measures each word's position with the DOM Range API to fill the
+              line smoothly at 60fps. The display corrects video drift against
+              the audio clock, which plays on whichever device owns the
+              speakers.
+            </p>
+          </li>
+          <li>
+            <h3>Audio ownership across devices</h3>
+            <p>
+              Exactly one control plays sound at a time. It reports its
+              playback position to the server several times a second, which
+              relays it to the display and to every other phone, so any device
+              can show progress, seek or stop.
+            </p>
+          </li>
+          <li>
+            <h3>In-app YouTube download</h3>
+            <p>
+              Search or paste a link from any phone and the server downloads
+              1080p video straight into the song library. yt-dlp and ffmpeg
+              are bundled and checksum-verified at build time, Electron itself
+              serves as the JavaScript runtime, and progress streams over the
+              socket.
+            </p>
+          </li>
+          <li>
+            <h3>Spreadsheet sync without dependencies</h3>
+            <p>
+              Questions live in an Excel file. A small xlsx reader (zip and XML
+              parsing with Node built-ins) validates every row, reports errors
+              with sheet and row numbers, and merges by content so rounds
+              already built keep their questions.
+            </p>
+          </li>
+          <li>
+            <h3>Built for a live room</h3>
+            <p>
+              The song folder is watched and rescanned automatically. A missing
+              file never cuts a song that is playing. Rounds reset and return
+              to the logo on their own, and the keyboard drives every game.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Source code</h2>
+        <p class="note">
+          The repository is private. I'm happy to walk through the code in an
+          interview.
+        </p>
+      </section>
+
+      <footer>
+        <a href="../index.html">← Back to Nady Wagdy</a>
+      </footer>
+    </div>
+  </body>
+</html>
